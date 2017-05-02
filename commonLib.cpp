@@ -47,18 +47,16 @@ bool loadParams(char* fName, ProbParam_t& param) {
 				if (id > 2) {
 					istringstream iss(line);
 					string temp;
-					if (id == 3)
+					if (line.find("num_iterations") != std::string::npos)
 						iss >> temp >> param.nIterations;
-					if (id == 4)
+					if (line.find("learning_rate") != std::string::npos)
 						iss >> temp >> param.learningRate;
-					if (id == 5)
+					if (line.find("start_a") != std::string::npos)
 						iss >> temp >> param.startPoint.x;
-					if (id == 6)
+					if (line.find("start_b") != std::string::npos)
 						iss >> temp >> param.startPoint.y;
-					if (id == 7)
+					if (line.find("num_folds") != std::string::npos)
 						iss >> temp >> param.nFolds;
-					if (id == 8)
-						iss >> temp >> param.eval;
 				}
             }
 			id++;

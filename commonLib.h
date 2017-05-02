@@ -30,7 +30,7 @@ typedef struct Point2D {
 typedef struct LinearRegressionModel {
     float				Ermsd;
     float				a, b;
-    vector<float>		errHistogram;
+    float				errHistogram[10];
 } LinearRegressionModel_t;
 
 typedef struct ProbParam {

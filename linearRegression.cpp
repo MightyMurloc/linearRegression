@@ -7,20 +7,18 @@
 bool linearRegression(DataIterator_t& dataIter, ProbParam_t& param,
                       LinearRegressionModel_t& model) {
 	model.a = param.startPoint.x, model.b = param.startPoint.y;
-	
-	for (int i = 0; i < param.nIterations; i++) {
+	float alpha = param.learningRate;
+	for (int i = 0; i < param.nIterations; ++i) {
 		float deriv_a = 0, deriv_b = 0;
-		for (int j = 0; j < dataIter.data.size(); j++) {
+		for (int j = 0; j < dataIter.data.size(); ++j) {
 			float x = dataIter.data[j].x, y = dataIter.data[j].y;
-			deriv_a -= x*(y - model.a*x - model.b);
-			deriv_b -= y - model.a*x - model.b;
+			deriv_a += x*(model.a*x + model.b - y);
+			deriv_b += model.a*x + model.b - y;
 		}
 
-		float length = sqrt((deriv_a)*(deriv_a)+(deriv_b)*(deriv_b));
-		deriv_a /= length;
-		deriv_b /= length;
-		model.a -= param.learningRate*deriv_a;
-		model.b -= param.learningRate*deriv_b;
+		float length = sqrt(pow(deriv_a, 2) + pow(deriv_b, 2));
+		model.a -= alpha*(deriv_a/length);
+		model.b -= alpha*(deriv_b/length);
 	}
     return true;
 }
@@ -30,40 +28,36 @@ bool modelEvaluationLR(DataIterator_t& dataIter, LinearRegressionModel_t& model)
 	vector<float> e;
 	model.Ermsd = 0;
 
-	for (int i = 0; i < dataIter.data.size(); i++) {
-		float x = dataIter.data[i].x, y = dataIter.data[i].y;
-		model.Ermsd += (model.a * x + model.b - y)*(model.a * x + model.b - y);
-	}
-	model.Ermsd /= dataIter.data.size();
-	model.Ermsd = sqrt(model.Ermsd);
-
-	for (int i = 0; i < dataIter.data.size(); i++) {
+	for (int i = 0; i < dataIter.data.size(); ++i) {
 		float x = dataIter.data[i].x, y = dataIter.data[i].y;
 		float temp = model.a * x + model.b - y;
 		mean += temp;
 		e.push_back(temp);
 	}
 	mean /= dataIter.data.size();
+	
+	for (int i = 0; i < dataIter.data.size(); ++i) {
+		model.Ermsd += pow(e[i], 2);
+	}
+	model.Ermsd /= dataIter.data.size();
+	model.Ermsd = sqrt(model.Ermsd);
 
-	for (int i = 0; i < dataIter.data.size(); i++) {
-		float x = dataIter.data[i].x, y = dataIter.data[i].y;
-		sigma += (model.a * x + model.b - y - mean) * (model.a * x + model.b - y - mean);
+	for (int i = 0; i < dataIter.data.size(); ++i) {
+		sigma += pow(e[i] - mean, 2);
 	}
 	sigma /= dataIter.data.size();
 	sigma = sqrtf(sigma);
 
 	float v_min = mean - 3 * sigma, v_max = mean + 3 * sigma;
-	vector<float> interval;
-	for (int i = 0; i < 10; i++) {
+	float interval[10];
+	for (int i = 0; i < 10; ++i) {
 		float temp = v_min + (i + 1)*((v_max - v_min) / 10);
-		interval.push_back(temp);
+		interval[i] = temp;
 	}
-	for (int i = 0; i < 10; i++) {
-		float temp = 0;
-		model.errHistogram.push_back(temp);
+	for (int i = 0; i < 10; ++i) {
+		model.errHistogram[i] = 0;
 	}
-	float length = 0;
-	for (int i = 0; i < dataIter.data.size(); i++) {
+	for (int i = 0; i < dataIter.data.size(); ++i) {
 		if (e[i] < v_min || e[i] > v_max) continue;
 		if (e[i] < interval[0])
 			model.errHistogram[0] += 1;
@@ -78,10 +72,14 @@ bool modelEvaluationLR(DataIterator_t& dataIter, LinearRegressionModel_t& model)
 			}
 		}
 	}
-	for (int i = 0; i < 10; i++)
+	
+	int length = 0;
+	for (int i = 0; i < 10; ++i) {
 		length += model.errHistogram[i];
-	for (int i = 0; i < 10; i++)
+	}
+	for (int i = 0; i < 10; ++i) {
 		model.errHistogram[i] /= length;
+	}
 
     return true;
 }
@@ -96,8 +94,7 @@ bool kFoldTraining(DataIterator_t& dataIter, ProbParam_t& param,
 
 	while (dataIter.curBlock < param.nFolds) {
 		DataIterator_t testData, trainData;
-		int div = dataIter.data.size() / param.nFolds;
-		int size = (dataIter.data.size() % param.nFolds == 0) ? div : (div + 1);
+		int size = dataIter.data.size() / param.nFolds;
 		if (dataIter.curBlock != param.nFolds - 1) {
 			dataIter.batchSize = size;
 		}
@@ -105,29 +102,31 @@ bool kFoldTraining(DataIterator_t& dataIter, ProbParam_t& param,
 			dataIter.batchSize = dataIter.data.size() - (param.nFolds - 1)*size;
 
 		int pos = dataIter.curBlock*size;
-		for (int i = 0; i < dataIter.batchSize; i++) {
+		for (int i = 0; i < dataIter.batchSize; ++i) {
 			Point2D_t temp = dataIter.data[pos];
 			testData.data.push_back(temp);
 			pos++;
 		}
 
-		for (int i = 0; i < dataIter.curBlock*size; i++) {
+		for (int i = 0; i < dataIter.curBlock*size; ++i) {
 			Point2D_t temp = dataIter.data[i];
 			trainData.data.push_back(temp);
 		}
-		pos = (dataIter.curBlock + 1)*size;
-		for (int i = pos; i < dataIter.data.size(); i++) {
+		pos = (dataIter.curBlock + 1)*testData.data.size();
+		for (int i = pos; i < dataIter.data.size(); ++i) {
 			Point2D_t temp = dataIter.data[pos];
 			trainData.data.push_back(temp);
 			pos++;
 		}
 
-		linearRegression(testData, param, model);
-		cout << right << setw(7) << model.a << right << setw(7) << model.b;
-		modelEvaluationLR(trainData, model);
-		cout << right << setw(7) << model.Ermsd;
-		for (int i = 0; i < 10; i++)
-			cout << right << setw(7) << model.errHistogram[i];
+		linearRegression(trainData, param, model);
+		cout << right << setw(7) << model.a << " " << right << setw(7) << model.b << " ";
+		
+		modelEvaluationLR(testData, model);
+		cout << right << setw(7) << model.Ermsd << " ";
+		
+		for (int i = 0; i < 10; ++i)
+			cout << right << setw(7) << model.errHistogram[i] << " ";
 		cout << endl;
 
 		dataIter.curBlock++;
