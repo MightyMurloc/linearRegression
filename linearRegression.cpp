@@ -89,7 +89,6 @@ bool kFoldTraining(DataIterator_t& dataIter, ProbParam_t& param,
 	cout << "---------------------------------------------------------------------------------\n"
 			"Output of the validation\n"
 			"---------------------------------------------------------------------------------\n";
-
 	dataIter.curBlock = 0;
 
 	while (dataIter.curBlock < param.nFolds) {
