@@ -87,10 +87,9 @@ bool modelEvaluationLR(DataIterator_t& dataIter, LinearRegressionModel_t& model)
 bool kFoldTraining(DataIterator_t& dataIter, ProbParam_t& param,
                    LinearRegressionModel_t& model) {
 	cout << "---------------------------------------------------------------------------------\n"
-			"Output of the validation\n"
-			"---------------------------------------------------------------------------------\n";
+		 << "Output of the validation\n"
+		 << "---------------------------------------------------------------------------------\n";
 	dataIter.curBlock = 0;
-
 	while (dataIter.curBlock < param.nFolds) {
 		DataIterator_t testData, trainData;
 		int size = dataIter.data.size() / param.nFolds;
@@ -119,13 +118,13 @@ bool kFoldTraining(DataIterator_t& dataIter, ProbParam_t& param,
 		}
 
 		linearRegression(trainData, param, model);
-		cout << right << setw(7) << model.a << " " << right << setw(7) << model.b << " ";
-		
 		modelEvaluationLR(testData, model);
-		cout << right << setw(7) << model.Ermsd << " ";
+		
+		cout << right << setw(7) << fixed << setprecision(3) << model.a << right << setw(7) << fixed << setprecision(3) << model.b;
+		cout << right << setw(7) << fixed << setprecision(3) << model.Ermsd;
 		
 		for (int i = 0; i < 10; ++i)
-			cout << right << setw(7) << model.errHistogram[i] << " ";
+			if (param.eval) cout << right << setw(7) << fixed << setprecision(3) << model.errHistogram[i];
 		cout << endl;
 
 		dataIter.curBlock++;

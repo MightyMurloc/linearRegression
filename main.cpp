@@ -23,7 +23,7 @@ int main(int narg, char** argv) {
     DataIterator_t          data;
     LinearRegressionModel_t model;
 
-    cout << fixed << setprecision(5);// preset for floating point numbers
+    cout << fixed << setprecision(3);// preset for floating point numbers
     if (narg < 3) {
         cout << "usage: pf162a01 <inputData> <inputConfig>\n";
         return -1;

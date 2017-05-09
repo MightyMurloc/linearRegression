@@ -57,6 +57,8 @@ bool loadParams(char* fName, ProbParam_t& param) {
 						iss >> temp >> param.startPoint.y;
 					if (line.find("num_folds") != std::string::npos)
 						iss >> temp >> param.nFolds;
+					if (line.find("eval") != std::string::npos)
+						iss >> temp >> param.eval;
 				}
             }
 			id++;
